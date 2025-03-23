@@ -1,0 +1,16 @@
+{
+  "name": "rocks.alican.texttween",
+  "author": "Alican HASIRCI",
+  "displayName": "Text Tween",
+  "version": "1.0.0",
+  "unity": "6000.0",
+  "category": "Unity",
+  "keywords": [
+    "textmeshpro",
+    "text",
+    "tween",
+    "mesh",
+    "modifiers"
+  ],
+  "description": "A small library to animate TMP texts"
+}
