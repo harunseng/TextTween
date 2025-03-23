@@ -1,4 +1,5 @@
 using System;
+using TextTween.Native;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -20,10 +21,13 @@ namespace TextTween.Modifiers {
             Z = 1 << 2,
         }
 
+        [SerializeField] private AnimationCurve _curve;
         [SerializeField] private Type _type;
         [SerializeField] private Scale _scale;
         [SerializeField] private float3 _intensity;
         [SerializeField] private float2 _pivot;
+        
+        private NativeCurve _nCurve;
         
         public override JobHandle Schedule(
             float4 bounds,
@@ -32,9 +36,11 @@ namespace TextTween.Modifiers {
             NativeArray<float4> colors,
             NativeArray<CharData> charData,
             JobHandle dependency) {
+            if (!_nCurve.IsCreated) _nCurve.Update(_curve, 1024);
             return new Job(
                 vertices, 
-                charData, 
+                charData,
+                _nCurve,
                 _intensity,
                 _pivot,
                 _type,
@@ -42,11 +48,14 @@ namespace TextTween.Modifiers {
                 progress).Schedule(charData.Length, 64, dependency);
         }
 
-        public override void Dispose() {}
+        public override void Dispose() {
+            if (_nCurve.IsCreated) _nCurve.Dispose();
+        }
 
         private struct Job : IJobParallelFor {
             [NativeDisableParallelForRestriction] private NativeArray<float3> _vertices;
             [ReadOnly] private NativeArray<CharData> _data;
+            private readonly NativeCurve _curve;
             private readonly Type _type;
             private readonly Scale _scale;
             private readonly float3 _intensity;
@@ -56,6 +65,7 @@ namespace TextTween.Modifiers {
             public Job(
                 NativeArray<float3> vertices, 
                 NativeArray<CharData> data, 
+                NativeCurve curve,
                 float3 intensity, 
                 float2 pivot,
                 Type type,
@@ -63,6 +73,7 @@ namespace TextTween.Modifiers {
                 float progress) {
                 _vertices = vertices;
                 _data = data;
+                _curve = curve;
                 _type = type;
                 _scale = scale;
                 _intensity = intensity;
@@ -75,7 +86,7 @@ namespace TextTween.Modifiers {
                 if (!characterData.IsVisible) return;
                 var vertexOffset = characterData.VertexIndex;
                 var offset = Offset(_vertices, vertexOffset, _pivot);
-                var p = Remap(_progress, characterData.Interval);
+                var p = _curve.Evaluate(Remap(_progress, characterData.Interval));
                 var m = GetTransformation(p);
                 for (var i = 0; i < characterData.VertexCount; i++) {
                     _vertices[vertexOffset + i] -= offset;
