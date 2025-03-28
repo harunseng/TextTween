@@ -1,4 +1,5 @@
 using System;
+using TextTween.Extensions;
 using TextTween.Native;
 using Unity.Collections;
 using Unity.Jobs;
@@ -8,14 +9,14 @@ using UnityEngine;
 namespace TextTween.Modifiers {
     [AddComponentMenu("TextTween/Modifiers/Transform Modifier")]
     public class TransformModifier : CharModifier {
-        public enum Type {
+        private enum Type {
             Position, 
             Rotation, 
             Scale
         }
 
         [Flags]
-        public enum Scale {
+        private enum Scale {
             X = 1 << 0, 
             Y = 1 << 1, 
             Z = 1 << 2,
@@ -108,9 +109,9 @@ namespace TextTween.Modifiers {
                         fr = quaternion.Euler(math.radians(_intensity * e));
                         break;
                     case Type.Scale:
-                        if (_scale.HasFlag(Scale.X)) fs.x = e * _intensity.x;
-                        if (_scale.HasFlag(Scale.Y)) fs.y = e * _intensity.y;
-                        if (_scale.HasFlag(Scale.Z)) fs.z = e * _intensity.z;
+                        if (_scale.HasFlagNoAlloc(Scale.X)) fs.x = e * _intensity.x;
+                        if (_scale.HasFlagNoAlloc(Scale.Y)) fs.y = e * _intensity.y;
+                        if (_scale.HasFlagNoAlloc(Scale.Z)) fs.z = e * _intensity.z;
                         break;
                     default:
                         return float4x4.identity;
