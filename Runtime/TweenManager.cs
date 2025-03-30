@@ -41,6 +41,10 @@ namespace TextTween
             }
             for (int i = 0; i < _texts.Length; i++)
             {
+                if (_texts[i] == null)
+                {
+                    continue;
+                }
                 _texts[i].ForceMeshUpdate(true);
             }
 
@@ -134,6 +138,10 @@ namespace TextTween
             int vertexOffset = 0;
             for (int i = 0; i < _texts.Length; i++)
             {
+                if (_texts[i] == null)
+                {
+                    continue;
+                }
                 int count = _texts[i].mesh.vertexCount;
                 _texts[i].mesh.vertices.MemCpy(_vertices, vertexOffset, count);
                 _texts[i].mesh.colors.MemCpy(_colors, vertexOffset, count);
@@ -225,7 +233,8 @@ namespace TextTween
                 {
                     continue;
                 }
-                _jobHandle = _modifiers[i].Schedule(progress, vertices, colors, _charData, _jobHandle);
+                _jobHandle = _modifiers[i]
+                    .Schedule(progress, vertices, colors, _charData, _jobHandle);
             }
 
             _jobHandle.Complete();
@@ -245,11 +254,11 @@ namespace TextTween
             for (int i = 0; i < texts.Count; i++)
             {
                 TMP_Text text = texts[i];
-                if (text.mesh == null)
+                if (text == null || text.mesh == null)
                 {
                     continue;
                 }
-                
+
                 int count = text.mesh.vertexCount;
                 text.mesh.SetVertices(vertices, offset, count);
                 text.mesh.SetColors(colors, offset, count);
