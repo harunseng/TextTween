@@ -14,6 +14,7 @@ namespace TextTween.Editor
     {
         private float _progress;
         private float _offset;
+        private bool _enabled;
         private readonly List<TMP_Text> _texts = new();
         private readonly List<CharModifier> _modifiers = new();
 
@@ -78,6 +79,18 @@ namespace TextTween.Editor
             createArrays = false;
             applyChanges = false;
             oldTexts = _texts;
+            if (!manager.enabled || !manager.gameObject.activeInHierarchy)
+            {
+                _enabled = false;
+                return;
+            }
+
+            if (!_enabled)
+            {
+                createArrays = true;
+                applyChanges = true;
+                _enabled = true;
+            }
 
             if (manager.Offset != _offset)
             {
