@@ -81,10 +81,10 @@
 
             text = textObject.GetComponent<TextMeshPro>();
             tweenManager = tweenManagerObject.GetComponent<TweenManager>();
-            tweenManager._texts = new TMP_Text[] { text };
+            tweenManager.Texts = new TMP_Text[] { text };
             T modifier = tweenManager.GetComponent<T>();
             SetupModifier(modifier);
-            tweenManager._modifiers = new List<CharModifier> { modifier };
+            tweenManager.Modifiers = new List<CharModifier> { modifier };
         }
 
         // Modifiers need to have their relevant properties setup, or they'll throw doing runtime stuff

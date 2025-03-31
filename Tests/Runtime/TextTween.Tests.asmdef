@@ -1,6 +1,6 @@
 {
     "name": "TextTween.Tests",
-    "rootNamespace": "TextTween.Tests",
+    "rootNamespace": "TextTween",
     "references": [
         "TextTween",
         "Unity.TextMeshPro",

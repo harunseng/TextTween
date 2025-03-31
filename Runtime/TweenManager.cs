@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using UnityEngine.Serialization;
 
 [assembly: InternalsVisibleTo("TextTween.Tests")]
 [assembly: InternalsVisibleTo("TextTween.Editor")]
@@ -26,11 +27,11 @@ namespace TextTween
         [Range(0, 1f)]
         public float Offset;
 
-        [SerializeField]
-        internal TMP_Text[] _texts;
+        [SerializeField, FormerlySerializedAs("_texts")]
+        internal TMP_Text[] Texts;
 
-        [SerializeField]
-        internal List<CharModifier> _modifiers;
+        [SerializeField, FormerlySerializedAs("_modifiers")]
+        internal List<CharModifier> Modifiers;
 
         private NativeArray<CharData> _charData;
         private NativeArray<float3> _vertices;
@@ -50,15 +51,15 @@ namespace TextTween
 
         private void OnEnable()
         {
-            if (_texts == null || _texts.Length == 0)
+            if (Texts == null || Texts.Length == 0)
             {
                 return;
             }
             if (!Application.isPlaying)
             {
-                for (int i = 0; i < _texts.Length; i++)
+                for (int i = 0; i < Texts.Length; i++)
                 {
-                    TMP_Text text = _texts[i];
+                    TMP_Text text = Texts[i];
                     if (text == null)
                     {
                         continue;
@@ -110,9 +111,9 @@ namespace TextTween
         internal void OnTextChanged(Object obj)
         {
             bool found = false;
-            for (int i = 0; i < _texts.Length; i++)
+            for (int i = 0; i < Texts.Length; i++)
             {
-                if (_texts[i] != obj)
+                if (Texts[i] != obj)
                 {
                     continue;
                 }
@@ -125,7 +126,7 @@ namespace TextTween
                 return;
             }
 
-            DisposeArrays(_texts, obj as TMP_Text);
+            DisposeArrays(Texts, obj as TMP_Text);
             CreateNativeArrays();
             ApplyModifiers(Progress);
         }
@@ -139,9 +140,9 @@ namespace TextTween
         private void CreateMeshArrays()
         {
             int vertexCount = 0;
-            for (int i = 0; i < _texts.Length; i++)
+            for (int i = 0; i < Texts.Length; i++)
             {
-                TMP_Text text = _texts[i];
+                TMP_Text text = Texts[i];
                 if (text == null)
                 {
                     continue;
@@ -166,9 +167,9 @@ namespace TextTween
             );
 
             int vertexOffset = 0;
-            for (int i = 0; i < _texts.Length; i++)
+            for (int i = 0; i < Texts.Length; i++)
             {
-                TMP_Text text = _texts[i];
+                TMP_Text text = Texts[i];
                 if (text == null)
                 {
                     continue;
@@ -206,9 +207,9 @@ namespace TextTween
         private void CreateCharDataArray()
         {
             int visibleCharCount = 0;
-            for (int i = 0; i < _texts.Length; i++)
+            for (int i = 0; i < Texts.Length; i++)
             {
-                TMP_Text text = _texts[i];
+                TMP_Text text = Texts[i];
                 if (text == null)
                 {
                     continue;
@@ -232,9 +233,9 @@ namespace TextTween
             );
 
             int indexOffset = 0;
-            for (int i = 0, k = 0; i < _texts.Length; i++)
+            for (int i = 0, k = 0; i < Texts.Length; i++)
             {
-                TMP_Text text = _texts[i];
+                TMP_Text text = Texts[i];
                 if (text == null)
                 {
                     continue;
@@ -283,18 +284,18 @@ namespace TextTween
             using NativeArray<float3> vertices = new(_vertices, Allocator.TempJob);
             using NativeArray<float4> colors = new(_colors, Allocator.TempJob);
 
-            for (int i = 0; i < _modifiers.Count; i++)
+            for (int i = 0; i < Modifiers.Count; i++)
             {
-                if (_modifiers[i] == null || !_modifiers[i].enabled)
+                if (Modifiers[i] == null || !Modifiers[i].enabled)
                 {
                     continue;
                 }
-                _jobHandle = _modifiers[i]
+                _jobHandle = Modifiers[i]
                     .Schedule(progress, vertices, colors, _charData, _jobHandle);
             }
 
             _jobHandle.Complete();
-            UpdateMeshes(_texts, vertices, colors);
+            UpdateMeshes(Texts, vertices, colors);
             _current = Progress;
         }
 
@@ -344,7 +345,7 @@ namespace TextTween
 
         public void Dispose()
         {
-            Dispose(_texts);
+            Dispose(Texts);
         }
 
         public void Dispose(IReadOnlyList<TMP_Text> texts)

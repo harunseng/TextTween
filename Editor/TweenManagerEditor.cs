@@ -72,9 +72,9 @@ namespace TextTween.Editor
                     _progress = manager.Progress;
                     _offset = manager.Offset;
                     _texts.Clear();
-                    _texts.AddRange(manager._texts ?? Array.Empty<TMP_Text>());
+                    _texts.AddRange(manager.Texts ?? Array.Empty<TMP_Text>());
                     _modifiers.Clear();
-                    _modifiers.AddRange(manager._modifiers ?? Enumerable.Empty<CharModifier>());
+                    _modifiers.AddRange(manager.Modifiers ?? Enumerable.Empty<CharModifier>());
                 }
                 return;
             }
@@ -100,7 +100,7 @@ namespace TextTween.Editor
                 _progress = manager.Progress;
             }
 
-            IReadOnlyList<TMP_Text> texts = manager._texts ?? Array.Empty<TMP_Text>();
+            IReadOnlyList<TMP_Text> texts = manager.Texts ?? Array.Empty<TMP_Text>();
             if (!_texts.SequenceEqual(texts))
             {
                 createArrays = true;
@@ -111,7 +111,7 @@ namespace TextTween.Editor
             }
 
             IReadOnlyList<CharModifier> modifiers =
-                manager._modifiers as IReadOnlyList<CharModifier> ?? Array.Empty<CharModifier>();
+                manager.Modifiers as IReadOnlyList<CharModifier> ?? Array.Empty<CharModifier>();
             if (!_modifiers.SequenceEqual(modifiers))
             {
                 applyChanges = true;
@@ -127,7 +127,7 @@ namespace TextTween.Editor
                 return;
             }
 
-            if (property.name == nameof(TweenManager._texts))
+            if (property.name == nameof(TweenManager.Texts))
             {
                 menu.AddItem(
                     new GUIContent("Find All Texts"),
@@ -136,7 +136,7 @@ namespace TextTween.Editor
                 );
             }
 
-            if (property.name == nameof(TweenManager._modifiers))
+            if (property.name == nameof(TweenManager.Modifiers))
             {
                 menu.AddItem(
                     new GUIContent("Find All Modifiers"),
