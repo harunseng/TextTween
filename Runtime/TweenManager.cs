@@ -1,16 +1,21 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using TextTween.Native;
-using TMPro;
-using Unity.Collections;
-using Unity.Jobs;
-using Unity.Mathematics;
-using UnityEngine;
-using Object = UnityEngine.Object;
+
+[assembly: InternalsVisibleTo("TextTween.Tests")]
+[assembly: InternalsVisibleTo("TextTween.Editor")]
 
 namespace TextTween
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
+    using Native;
+    using TMPro;
+    using Unity.Collections;
+    using Unity.Jobs;
+    using Unity.Mathematics;
+    using UnityEngine;
+    using Object = UnityEngine.Object;
+
     [AddComponentMenu("TextTween/Tween Manager")]
     [ExecuteInEditMode]
     public class TweenManager : MonoBehaviour, IDisposable
@@ -22,10 +27,10 @@ namespace TextTween
         public float Offset;
 
         [SerializeField]
-        private TMP_Text[] _texts;
+        internal TMP_Text[] _texts;
 
         [SerializeField]
-        private List<CharModifier> _modifiers;
+        internal List<CharModifier> _modifiers;
 
         private NativeArray<CharData> _charData;
         private NativeArray<float3> _vertices;
@@ -63,7 +68,7 @@ namespace TextTween
                 }
             }
 
-            DisposeArrays(_texts);
+            Dispose();
             CreateNativeArrays();
             ApplyModifiers(Progress);
             if (!_eventAdded)
@@ -102,7 +107,7 @@ namespace TextTween
             ApplyModifiers(Progress);
         }
 
-        private void OnTextChanged(Object obj)
+        internal void OnTextChanged(Object obj)
         {
             bool found = false;
             for (int i = 0; i < _texts.Length; i++)
@@ -136,11 +141,12 @@ namespace TextTween
             int vertexCount = 0;
             for (int i = 0; i < _texts.Length; i++)
             {
-                if (_texts[i] == null)
+                TMP_Text text = _texts[i];
+                if (text == null)
                 {
                     continue;
                 }
-                vertexCount += _texts[i].mesh.vertexCount;
+                vertexCount += text.mesh.vertexCount;
             }
 
             if (vertexCount == 0)
@@ -169,8 +175,30 @@ namespace TextTween
                 }
                 int count = text.mesh.vertexCount;
                 _lastKnownVertexCount[text] = count;
+                if (count == 0)
+                {
+                    continue;
+                }
+
                 text.mesh.vertices.MemCpy(_vertices, vertexOffset, count);
-                text.mesh.colors.MemCpy(_colors, vertexOffset, count);
+                /*
+                    For some reason, when the editor auto switches from a Test run via the Test Runner to an open
+                    scene with TweenManagers in it, the vertices array will be correct, but the color array will be
+                    null. I have no idea why. If you click in the scene, things will properly initialize.
+                 */
+                Color[] colors = text.mesh.colors;
+                if (colors is { Length: > 0 })
+                {
+                    colors.MemCpy(_colors, vertexOffset, count);
+                }
+                else
+                {
+                    for (int j = 0; j < count; j++)
+                    {
+                        _colors[vertexOffset + j] = new float4(1, 1, 1, 1);
+                    }
+                }
+
                 vertexOffset += count;
             }
         }
@@ -180,17 +208,19 @@ namespace TextTween
             int visibleCharCount = 0;
             for (int i = 0; i < _texts.Length; i++)
             {
-                if (_texts[i] == null)
+                TMP_Text text = _texts[i];
+                if (text == null)
                 {
                     continue;
                 }
-                visibleCharCount += GetVisibleCharCount(_texts[i]);
+                visibleCharCount += GetVisibleCharCount(text);
             }
 
             if (visibleCharCount == 0)
             {
                 return;
             }
+
             if (_charData.IsCreated)
             {
                 _charData.Dispose();
@@ -209,7 +239,7 @@ namespace TextTween
                 {
                     continue;
                 }
-                int charCount = GetVisibleCharCount(_texts[i]);
+                int charCount = GetVisibleCharCount(text);
                 TMP_CharacterInfo[] characterInfos = text.textInfo.characterInfo;
                 float totalTime = (charCount - 1) * Offset + 1;
                 float charOffset = Offset / totalTime;
@@ -264,9 +294,7 @@ namespace TextTween
             }
 
             _jobHandle.Complete();
-
             UpdateMeshes(_texts, vertices, colors);
-
             _current = Progress;
         }
 
@@ -293,8 +321,12 @@ namespace TextTween
                     continue;
                 }
 
-                text.mesh.SetVertices(vertices, offset, count);
-                text.mesh.SetColors(colors, offset, count);
+                if (count != 0)
+                {
+                    text.mesh.SetVertices(vertices, offset, count);
+                    text.mesh.SetColors(colors, offset, count);
+                }
+
                 offset += count;
 
                 TMP_MeshInfo[] meshInfos = text.textInfo.meshInfo;
@@ -350,7 +382,10 @@ namespace TextTween
             for (int j = 0; j < text.textInfo.characterCount; j++)
             {
                 if (!characterInfos[j].isVisible)
+                {
                     continue;
+                }
+
                 count++;
             }
 
