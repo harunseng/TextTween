@@ -74,10 +74,13 @@ namespace TextTween.Modifiers
             public void Execute(int index)
             {
                 CharData characterData = _data[index];
-                int vertexOffset = characterData.VertexIndex;
-                float3 offset = Offset(_vertices, vertexOffset, .5f);
-                float width = characterData.Bounds.z - characterData.Bounds.x;
-                float x = (offset.x - characterData.Bounds.x) / width;
+                float width = characterData.TextBounds.Max.x - characterData.TextBounds.Min.x;
+                if (!characterData.IsValid() || width == 0)
+                {
+                    return;
+                }
+                float3 offset = Offset(_data, index, .5f);
+                float x = (offset.x - characterData.TextBounds.Min.x) / width;
                 float p = Remap(_progress, characterData.Interval);
                 float y = _warpCurve.Evaluate(x) * p * _intensity;
                 float2 v = _warpCurve.Velocity(x);
@@ -88,15 +91,12 @@ namespace TextTween.Modifiers
                     quaternion.Euler(0, 0, a),
                     new float3(1, 1, 1)
                 );
-                for (int i = 0; i < characterData.VertexCount; i++)
-                {
-                    _vertices[vertexOffset + i] -= offset;
-                    _vertices[vertexOffset + i] = math.mul(
-                        m,
-                        new float4(_vertices[vertexOffset + i], 1)
-                    ).xyz;
-                    _vertices[vertexOffset + i] += offset;
-                }
+
+                float3 vertex = _vertices[index];
+                vertex -= offset;
+                vertex = math.mul(m, new float4(vertex, 1)).xyz;
+                vertex += offset;
+                _vertices[index] = vertex;
             }
         }
     }

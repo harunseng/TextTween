@@ -1,20 +1,32 @@
-using Unity.Mathematics;
-
 namespace TextTween
 {
+    using Extensions;
+    using Unity.Mathematics;
+    using Unity.Mathematics.Geometry;
+
     public struct CharData
     {
-        public float2 Interval { get; }
-        public int VertexIndex { get; }
-        public int VertexCount { get; }
-        public float4 Bounds { get; }
+        public int2 CharIndex { get; }
+        public float2 Interval { get; set; }
+        public MinMaxAABB CharBounds { get; }
+        public MinMaxAABB TextBounds { get; }
 
-        public CharData(float2 interval, int vertexIndex, int vertexCount, float4 bounds)
+        public CharData(
+            int2 charIndex,
+            float2 interval,
+            MinMaxAABB charBounds,
+            MinMaxAABB textBounds
+        )
         {
+            CharIndex = charIndex;
             Interval = interval;
-            VertexIndex = vertexIndex;
-            VertexCount = vertexCount;
-            Bounds = bounds;
+            CharBounds = charBounds;
+            TextBounds = textBounds;
+        }
+
+        public bool IsValid()
+        {
+            return !CharBounds.IsNaN() && !TextBounds.IsNaN() && CharIndex.x < CharIndex.y;
         }
     }
 }

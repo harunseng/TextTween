@@ -114,19 +114,19 @@ namespace TextTween.Modifiers
             public void Execute(int index)
             {
                 CharData characterData = _data[index];
-                int vertexOffset = characterData.VertexIndex;
-                float3 offset = Offset(_vertices, vertexOffset, _pivot);
+                if (!characterData.IsValid())
+                {
+                    return;
+                }
+                float3 offset = Offset(_data, index, _pivot);
                 float p = _curve.Evaluate(Remap(_progress, characterData.Interval));
                 float4x4 m = GetTransformation(p);
-                for (int i = 0; i < characterData.VertexCount; i++)
-                {
-                    _vertices[vertexOffset + i] -= offset;
-                    _vertices[vertexOffset + i] = math.mul(
-                        m,
-                        new float4(_vertices[vertexOffset + i], 1)
-                    ).xyz;
-                    _vertices[vertexOffset + i] += offset;
-                }
+
+                float3 vertex = _vertices[index];
+                vertex -= offset;
+                vertex = math.mul(m, new float4(vertex, 1)).xyz;
+                vertex += offset;
+                _vertices[index] = vertex;
             }
 
             private float4x4 GetTransformation(float progress)

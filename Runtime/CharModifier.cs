@@ -1,12 +1,13 @@
-using System;
-using System.Runtime.CompilerServices;
-using Unity.Collections;
-using Unity.Jobs;
-using Unity.Mathematics;
-using UnityEngine;
-
 namespace TextTween
 {
+    using System;
+    using System.Runtime.CompilerServices;
+    using Unity.Collections;
+    using Unity.Jobs;
+    using Unity.Mathematics;
+    using Unity.Mathematics.Geometry;
+    using UnityEngine;
+
     [ExecuteInEditMode]
     public abstract class CharModifier : MonoBehaviour, IDisposable
     {
@@ -25,12 +26,15 @@ namespace TextTween
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static float3 Offset(NativeArray<float3> vertices, int index, float2 pivot)
+        protected static float3 Offset(NativeArray<CharData> chars, int index, float2 pivot)
         {
-            float3 min = vertices[index + 0];
-            float3 max = vertices[index + 2];
-            float2 size = max.xy - min.xy;
-            return new float3(min.x + pivot.x * size.x, min.y + pivot.y * size.y, 0);
+            MinMaxAABB bounds = chars[index].CharBounds;
+            float3 size = bounds.Max - bounds.Min;
+            return new float3(
+                bounds.Min.x + size.x * pivot.x,
+                bounds.Min.y + size.y * pivot.y,
+                bounds.Min.z + size.z * .5f
+            );
         }
 
         private void OnDisable()
