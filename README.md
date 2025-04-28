@@ -23,13 +23,16 @@ You can add the package via PackageManager with the URL:
 ![](EditorResources/image_00.png)
 
 1. Start by adding **TweenManager** to your text.
-2. Bind the text to **Text** property.
-3. Add modifier components to a game object and add them to the list of **Modifiers**. Re-arrange the modifiers to change the order of modification.
-4. By changing the **Offset** value, you can adjust the char animation overlap. '0' for all letters animating together, '1' for all letters to animate one by one. 
+2. Bind the text to **Texts** property.
+3. Add modifier components to a game object and add them to the list of **Modifiers**. Re-arrange the modifiers to change the order of modification. 
 
 ### Modifiers
+#### 1.Interval Modifier
+![](EditorResources/interval_ss.png)
 
-#### 1.Transform Modifier
+Changes the character intervals by either overlapping or differing them. 
+
+#### 2.Transform Modifier
 ![](EditorResources/transform.gif)
 ![](EditorResources/transform_ss.png)
 
@@ -41,7 +44,7 @@ Allows you to modify letters position, scale or rotation according to curve over
 - Intensity: Amount of change per axis.
 - Pivot: Pivot point of transformation.
 
-#### 2.Color Modifier
+#### 3.Color Modifier
 ![](EditorResources/color.gif)
 ![](EditorResources/color_ss.png)
 
@@ -49,7 +52,7 @@ Lets to change the color of letters over time.
 
 - Gradient: The colors that will be interpolated according to progress.
 
-#### 3.Warp Modifier
+#### 4.Warp Modifier
 ![](EditorResources/warp.gif)
 ![](EditorResources/warp_ss.png)
 
@@ -62,12 +65,12 @@ Warps the lines of text according to intensity and curve provided over progress.
 
 | Text | Color Modifier Op/s | Transform Modifier Op/s | Warp Modifier Op/s |
 | ---- | ------------------- | ----------------------- | ------------------ |
-| A | 18,788 | 92,603 | 120,860 |
-| Ax10 | 17,098 | 29,377 | 46,784 |
-| Ax100 | 10,345 | 5,485 | 9,947 |
-| Ax1,000 | 4,327 | 2,985 | 3,391 |
-| Ax10,000 | 395 | 290 | 344 |
-| Ax1,000,000 | 14 | 14 | 15 |
+| A | 21,227 | 86,917 | 136,197 |
+| Ax10 | 16,750 | 23,957 | 77,840 |
+| Ax100 | 9,150 | 8,000 | 1,682 |
+| Ax1,000 | 2,302 | 1,552 | 3,182 |
+| Ax10,000 | 277 | 172 | 345 |
+| Ax16,250 | 170 | 97 | 212 |
 
 ## Contributing
 
