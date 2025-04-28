@@ -2,7 +2,6 @@ namespace TextTween.Extensions
 {
     using System.Runtime.CompilerServices;
     using Unity.Mathematics;
-    using Unity.Mathematics.Geometry;
 
     public static class MathExtensions
     {

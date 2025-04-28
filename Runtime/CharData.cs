@@ -2,7 +2,6 @@ namespace TextTween
 {
     using Extensions;
     using Unity.Mathematics;
-    using Unity.Mathematics.Geometry;
 
     public struct CharData
     {

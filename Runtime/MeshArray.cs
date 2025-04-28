@@ -6,7 +6,6 @@ namespace TextTween
     using Unity.Collections;
     using Unity.Jobs;
     using Unity.Mathematics;
-    using Unity.Mathematics.Geometry;
     using Utilities;
 
     public class MeshArray : IDisposable
