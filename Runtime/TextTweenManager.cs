@@ -92,6 +92,17 @@ namespace TextTween
             Dispose();
         }
 
+        internal void OnDestroy()
+        {
+            foreach (TMP_Text text in Texts)
+            {
+                if (text != null)
+                {
+                    text.ForceMeshUpdate(true);
+                }
+            }
+        }
+
         private void Update()
         {
             if (!Application.isPlaying || Mathf.Approximately(_progress, Progress))

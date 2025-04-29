@@ -4,15 +4,12 @@ namespace TextTween.Editor
     using System.Linq;
     using TMPro;
     using UnityEditor;
-    using UnityEditorInternal;
-    using UnityEngine;
 
     [CustomEditor(typeof(TextTweenManager))]
     public class TextDataManagerInspector : Editor
     {
         private TextTweenManager _manager;
         private SerializedProperty _textsProperty;
-        private ReorderableList _reorderableList;
 
         private List<TMP_Text> _previous = new();
 
