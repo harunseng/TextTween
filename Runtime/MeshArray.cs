@@ -18,6 +18,9 @@ namespace TextTween
         private NativeArray<float2> _uvs2;
         private NativeArray<CharData> _chars;
 
+        // Keep lazy since only one MeshArray will be doing operations
+        private HashSet<CharModifier> _uniqueModifiers;
+
         public MeshArray(int length, Allocator allocator)
         {
             _vertices = new NativeArray<float3>(length, allocator);
@@ -54,10 +57,12 @@ namespace TextTween
         public JobHandle Schedule(float progress, IReadOnlyList<CharModifier> modifiers)
         {
             JobHandle handle = new();
+            _uniqueModifiers ??= new HashSet<CharModifier>();
+            _uniqueModifiers.Clear();
             for (int i = 0; i < modifiers.Count; i++)
             {
                 CharModifier modifier = modifiers[i];
-                if (modifier == null || !modifier.enabled)
+                if (modifier == null || !modifier.enabled || !_uniqueModifiers.Add(modifier))
                 {
                     continue;
                 }
