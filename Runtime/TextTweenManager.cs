@@ -11,16 +11,17 @@ namespace TextTween
     using Unity.Collections;
     using Unity.Jobs;
     using UnityEngine;
+    using UnityEngine.Serialization;
     using Utilities;
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
 
     [Serializable, ExecuteInEditMode]
     public class TextTweenManager : MonoBehaviour, IDisposable
     {
         [Range(0, 1f)]
         public float Progress;
-
-        [SerializeField]
-        internal int BufferSize;
 
         [SerializeField]
         internal List<TMP_Text> Texts = new();
@@ -30,6 +31,22 @@ namespace TextTween
 
         [SerializeField]
         internal List<MeshData> MeshData = new();
+
+        [Header("Advanced")]
+        [Tooltip(
+            "The sum total number of vertices used for buffers across all Text instances being managed.\n\n"
+                + "Runtime buffer size will be the max of this value and ComputedBufferSize.\n\n"
+                + "<color=yellow>Should only be set if you know your text is going to grow to some size in the future"
+                + "</color>"
+        )]
+        public int ExplicitBufferSize = -1;
+
+        [Tooltip(
+            "Auto-configured by TextTween internals, changes to this value will be overwritten."
+        )]
+        [FormerlySerializedAs("BufferSize")]
+        [SerializeField]
+        internal int ComputedBufferSize;
 
         internal MeshArray Original;
         internal MeshArray Modified;
@@ -44,8 +61,10 @@ namespace TextTween
 
         internal void OnEnable()
         {
-            Original = new MeshArray(BufferSize, Allocator.Persistent);
-            Modified = new MeshArray(BufferSize, Allocator.Persistent);
+            int bufferSize = Math.Max(ExplicitBufferSize, ComputedBufferSize);
+            bufferSize = Math.Max(0, bufferSize);
+            Original = new MeshArray(bufferSize, Allocator.Persistent);
+            Modified = new MeshArray(bufferSize, Allocator.Persistent);
 
             TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(_onTextChange);
             TMPro_EventManager.TEXT_CHANGED_EVENT.Add(_onTextChange);
@@ -108,6 +127,8 @@ namespace TextTween
             }
 
             Move(meshData.Trail, meshData.Offset, length).Complete();
+
+            TryUpdateComputedBufferSize();
         }
 
         internal void Change(UnityEngine.Object obj)
@@ -149,14 +170,41 @@ namespace TextTween
 
         public void Allocate()
         {
+            int capacity = CalculateCapacity();
+            Original.EnsureCapacity(capacity);
+            Modified.EnsureCapacity(capacity);
+            TryUpdateComputedBufferSize(capacity);
+        }
+
+        private int CalculateCapacity()
+        {
             int vertexCount = 0;
             foreach (TMP_Text text in Texts)
             {
-                vertexCount += text.GetVertexCount();
+                if (text != null)
+                {
+                    vertexCount += text.GetVertexCount();
+                }
             }
 
-            Original.EnsureCapacity(vertexCount);
-            Modified.EnsureCapacity(vertexCount);
+            return vertexCount;
+        }
+
+        internal void TryUpdateComputedBufferSize(int? capacity = null)
+        {
+#if UNITY_EDITOR
+            // Update LKG of buffer size if we're in a place where serialization is ok (game not playing)
+            if (!Application.isPlaying)
+            {
+                int oldBufferSize = ComputedBufferSize;
+                int newBufferSize = capacity ?? CalculateCapacity();
+                if (oldBufferSize != newBufferSize)
+                {
+                    ComputedBufferSize = newBufferSize;
+                    EditorUtility.SetDirty(this);
+                }
+            }
+#endif
         }
 
         private JobHandle Move(int from, int to, int length, JobHandle dependsOn = default)
