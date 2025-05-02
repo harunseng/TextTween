@@ -7,7 +7,6 @@ namespace TextTween
 {
     using System;
     using System.Collections.Generic;
-    using Attributes;
     using TMPro;
     using Unity.Collections;
     using Unity.Jobs;
@@ -72,18 +71,19 @@ namespace TextTween
                 
                 To avoid this, force-update the meshes to ensure we're in a known-good state.
              */
-            foreach (TMP_Text text in Texts)
+            foreach (MeshData meshData in MeshData)
             {
-                if (text != null)
+                if (meshData.Text != null)
                 {
-                    text.ForceMeshUpdate(ignoreActiveState: true);
+                    meshData.Text.ForceMeshUpdate(ignoreActiveState: true);
                 }
             }
 
-            int bufferSize = Math.Max(ExplicitBufferSize, ComputedBufferSize);
-            bufferSize = Math.Max(0, bufferSize);
-            Original = new MeshArray(bufferSize, Allocator.Persistent);
-            Modified = new MeshArray(bufferSize, Allocator.Persistent);
+            Allocate();
+
+            CheckForMeshChanges();
+
+            Apply();
 
             TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(_onTextChange);
             TMPro_EventManager.TEXT_CHANGED_EVENT.Add(_onTextChange);
@@ -157,7 +157,6 @@ namespace TextTween
             }
 
             Move(meshData.Trail, meshData.Offset, length).Complete();
-            TryUpdateComputedBufferSize();
         }
 
         internal void Change(UnityEngine.Object obj)
@@ -167,26 +166,31 @@ namespace TextTween
                 return;
             }
 
-            TMP_Text tmp = (TMP_Text)obj;
-
-            int index = MeshData.GetIndex(tmp);
-            if (index < 0)
-            {
-                return;
-            }
-
             Allocate();
 
-            int delta = tmp.GetVertexCount() - MeshData[index].Length;
-            if (delta != 0 && index < MeshData.Count - 1)
-            {
-                int from = MeshData[index + 1].Offset;
-                int to = from + delta;
-                Move(from, to, MeshData[^1].Trail - from).Complete();
-            }
-            MeshData[index].Update(Original, MeshData[index].Offset);
+            CheckForMeshChanges();
 
             Apply();
+        }
+
+        internal void CheckForMeshChanges()
+        {
+            for (int i = 0; i < MeshData.Count; i++)
+            {
+                MeshData meshData = MeshData[i];
+                if (meshData.Text == null)
+                {
+                    continue;
+                }
+                int delta = meshData.Text.GetVertexCount() - meshData.Length;
+                if (delta != 0 && i < MeshData.Count - 1)
+                {
+                    int from = MeshData[i + 1].Offset;
+                    int to = from + delta;
+                    Move(from, to, MeshData[^1].Trail - from).Complete();
+                }
+                meshData.Update(Original, meshData.Offset);
+            }
         }
 
         public void Apply()
@@ -203,9 +207,20 @@ namespace TextTween
         public void Allocate()
         {
             int capacity = CalculateCapacity();
-            Original.EnsureCapacity(capacity);
-            Modified.EnsureCapacity(capacity);
-            TryUpdateComputedBufferSize(capacity);
+            EnsureCapacity(ref Original, capacity);
+            EnsureCapacity(ref Modified, capacity);
+        }
+
+        private static void EnsureCapacity(ref MeshArray meshArray, int capacity)
+        {
+            if (meshArray == null)
+            {
+                meshArray = new MeshArray(capacity, Allocator.Persistent);
+            }
+            else
+            {
+                meshArray.EnsureCapacity(capacity);
+            }
         }
 
         private int CalculateCapacity()
@@ -218,25 +233,14 @@ namespace TextTween
                     vertexCount += text.GetVertexCount();
                 }
             }
-
-            return vertexCount;
-        }
-
-        internal void TryUpdateComputedBufferSize(int? capacity = null)
-        {
-#if UNITY_EDITOR
-            // Update LKG of buffer size if we're in a place where serialization is ok (game not playing)
-            if (!Application.isPlaying)
+            if (ComputedBufferSize != vertexCount)
             {
-                int oldBufferSize = ComputedBufferSize;
-                int newBufferSize = capacity ?? CalculateCapacity();
-                if (oldBufferSize != newBufferSize)
-                {
-                    ComputedBufferSize = newBufferSize;
-                    EditorUtility.SetDirty(this);
-                }
-            }
+                ComputedBufferSize = vertexCount;
+#if UNITY_EDITOR
+                EditorUtility.SetDirty(this);
 #endif
+            }
+            return Math.Max(ComputedBufferSize, ExplicitBufferSize);
         }
 
         private JobHandle Move(int from, int to, int length, JobHandle dependsOn = default)
