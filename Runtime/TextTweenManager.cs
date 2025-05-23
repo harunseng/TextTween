@@ -18,6 +18,7 @@ namespace TextTween
 #endif
 
     [Serializable, ExecuteInEditMode]
+    [AddComponentMenu("TextTween/Text Tween Manager")]
     public class TextTweenManager : MonoBehaviour, IDisposable
     {
         [Header("Tween Config")]
@@ -103,6 +104,7 @@ namespace TextTween
                 {
                     text.ForceMeshUpdate(true);
                 }
+                RemoveAgent(text);
             }
         }
 
@@ -122,6 +124,8 @@ namespace TextTween
             {
                 return;
             }
+            
+            AddAgent(tmp);
 
             Allocate();
 
@@ -140,13 +144,19 @@ namespace TextTween
             Apply();
         }
 
-        public void Remove(TMP_Text text)
+        public void Remove(TMP_Text tmp, bool retainAgent = false)
         {
-            if (!MeshData.TryGetValue(text, out MeshData meshData))
+            if (!MeshData.TryGetValue(tmp, out MeshData meshData))
             {
                 return;
             }
 
+            if (!retainAgent)
+            {
+                RemoveAgent(tmp);
+            }
+            
+            Texts.Remove(tmp);
             meshData.Apply(Original);
             MeshData.Remove(meshData);
 
@@ -257,6 +267,23 @@ namespace TextTween
             }
 
             return Original.Move(from, to, length, dependsOn);
+        }
+        
+        private void AddAgent(TMP_Text tmp)
+        {
+            if (!tmp.TryGetComponent(out TextTweenAgent agent))
+            {
+                agent = tmp.gameObject.AddComponent<TextTweenAgent>();
+            }
+            agent.SetOwner(this);
+        }
+
+        private static void RemoveAgent(TMP_Text tmp)
+        {
+            if (tmp.TryGetComponent(out TextTweenAgent agent))
+            {
+                agent.Remove();
+            }
         }
 
         public void Dispose()
