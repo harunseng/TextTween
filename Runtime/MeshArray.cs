@@ -116,13 +116,13 @@ namespace TextTween
         private void CreateCharData(TMP_Text text, int offset, int length)
         {
             const int vertexPerChar = 4;
-            TMP_CharacterInfo[] characterInfos = text.textInfo.characterInfo;
             int charLength = text.textInfo.characterCount;
             MinMaxAABB textBounds = new(text.textBounds.min, text.textBounds.max);
             for (int i = 0, ci = 0; i < length && ci < charLength; i++, ci = i / vertexPerChar)
             {
-                TMP_CharacterInfo characterInfo = characterInfos[ci];
-                MinMaxAABB charBounds = new(characterInfo.bottomRight, characterInfo.topLeft);
+                float3 bottomLeft = _vertices[ci * vertexPerChar];
+                float3 topRight = _vertices[ci * vertexPerChar + 3];
+                MinMaxAABB charBounds = new(bottomLeft, topRight);
                 _chars[offset + i] = new CharData(
                     new int2(ci, charLength),
                     new float2(0, 1),
