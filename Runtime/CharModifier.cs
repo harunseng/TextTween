@@ -10,6 +10,8 @@ namespace TextTween
     [ExecuteInEditMode]
     public abstract class CharModifier : MonoBehaviour, IDisposable
     {
+        public bool animate;
+
         public abstract JobHandle Schedule(
             float progress,
             NativeArray<float3> vertices,

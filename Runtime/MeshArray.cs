@@ -68,7 +68,8 @@ namespace TextTween
                     continue;
                 }
 
-                handle = modifier.Schedule(progress, _vertices, _colors, _chars, handle);
+                float modifierProgress = modifier.animate ? progress : 1f;
+                handle = modifier.Schedule(modifierProgress, _vertices, _colors, _chars, handle);
             }
 
             return handle;
